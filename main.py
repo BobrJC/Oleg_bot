@@ -10,6 +10,7 @@ from aiogram.utils import executor
 from Token import token
 bot = Bot(token)
 dp = Dispatcher(bot)
+
 async def sleeping(message):
     await asyncio.sleep(5)
     await bot.send_message(message, 'я доспал!')
@@ -22,6 +23,15 @@ async def give_player_name(name):
     await bot.send_message(name.chat.id, 'Имя установлено! ')
     await bot.send_message(name.chat.id, 'Выберите класс!', reply_markup = keyboards.class_keyboard)
 
+async def print_status(user_id):
+    player = get_player(user_id)
+    await bot.send_message(user_id,
+        f'''
+        Состояние: {player.get_state}
+        До следующей прогулки:
+        '''
+    )
+
 async def give_player_class(user_id, class_of_player):
     player = get_player(user_id)
     player.set_class_of_player(class_of_player)
@@ -33,8 +43,8 @@ async def give_player_class(user_id, class_of_player):
 async def process_callback_kb(callback_query: types.CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
+    
     if data == 'status':
-        await sleeping(user_id)
         await bot.answer_callback_query(callback_query.id)
     elif data == 'equip':
         await bot.answer_callback_query(callback_query.id)
