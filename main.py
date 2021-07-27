@@ -1,7 +1,8 @@
+from weapons import generate_weapon
 from aiogram import Bot, types
 import asyncio
 from base import get_player, update_player, add_player
-from persons import player
+from persons import *
 from constants import states
 import keyboards
 from aiogram.utils.markdown import text
@@ -18,10 +19,10 @@ async def sleeping(message):
 async def give_player_name(name):
     player = get_player(name.from_user.id)
     player.set_name(name.text)
-    player.set_state('class')
+    player.set_state('well done!')
     update_player(name.from_user.id, player)
     await bot.send_message(name.chat.id, 'Имя установлено! ')
-    await bot.send_message(name.chat.id, 'Выберите класс!', reply_markup = keyboards.class_keyboard)
+    
 
 async def print_status(user_id):
     player = get_player(user_id)
@@ -32,18 +33,17 @@ async def print_status(user_id):
         '''
     )
 
-async def give_player_class(user_id, class_of_player):
-    player = get_player(user_id)
-    player.set_class_of_player(class_of_player)
-    player.set_state('well done!')
-    update_player(user_id, player)
-    await bot.send_message(user_id, 'Класс установлен!')
+# async def give_player_class(user_id, class_of_player):
+#     player = get_player(user_id)
+#     player.set_class_of_player(class_of_player)
+#     player.set_state('well done!')
+#     update_player(user_id, player)
+#     await bot.send_message(user_id, 'Класс установлен!')
 
 @dp.callback_query_handler(lambda c: c.data)
 async def process_callback_kb(callback_query: types.CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
-    
     if data == 'status':
         await bot.answer_callback_query(callback_query.id)
     elif data == 'equip':
@@ -51,18 +51,28 @@ async def process_callback_kb(callback_query: types.CallbackQuery):
     elif data == 'trip':
         await bot.answer_callback_query(callback_query.id)
     elif data == 'warrior' or data == 'thief' or data == 'bower':
-        await give_player_class(user_id, data)
+        if get_player(user_id) == []:
+
+            player = player_class_parser(data)('', 1000, 50, 100, state='name', class_of_plater= data)
+            weap = generate_weapon(player.get_available_weapon(), 1)
+            player.set_eqip(weap._name)
+            print(player.get_all_atributes())
+            add_player(user_id, player)
+            await bot.send_message(callback_query.message.chat.id, 'Назови своего персонажа!')
+        else:
+            await bot.send_message(callback_query.message.chat.id, f'{callback_query.from_user.first_name}, у тебя уже есть класс!')
         await bot.answer_callback_query(callback_query.id)
     
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message):
+    print(get_player(message.from_user.id))
     if message.text == '/start':
-        new_player = player(None, 1000, 100, 50)
-        if add_player(message.from_user.id, new_player):
+        if get_player(message.from_user.id) != []:
             await bot.send_message(message.chat.id, 'Ты уже в игре!')
         else:
-            await message.reply(f'Я Олег. Начнем игру. Назови своего персонажа.')
+            await message.reply(f'Я Олег. Начнем игру.')
+            await bot.send_message(message.chat.id, 'За какой класс ты бы хотел играть?', reply_markup = keyboards.class_keyboard)
     else:
         await message.reply(f'Этот бот -  игра, он находится в разработке.')
 
@@ -78,7 +88,7 @@ async def parse_states(message):
     if state == 'name':
         await give_player_name(message)
     elif state == 'class' and message.text.lower() == 'лягущка':
-        await give_player_class(message)
+        await bot.send_message(message.from_user.id, 'AAA')
 
 @dp.message_handler(content_types=['text'])
 async def get_text_messages(message):

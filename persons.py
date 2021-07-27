@@ -1,6 +1,15 @@
 import time
 from abc import abstractmethod
 from enum import Enum
+from weapons import weapon
+
+def player_class_parser(class_of_player: str):
+    if class_of_player == 'warrior':
+        return warrior
+    elif class_of_player == 'thief':
+        return thief
+    elif class_of_player == 'bower':
+        return bower
 
 class person:
     def get_hp(self):
@@ -54,12 +63,13 @@ class person:
     _armor: int = 0
     _level: int = 1
     _alife: bool = True
+    _weapon: weapon
     
 class player(person):
     
     def __init__(self, name, max_hp, armor, attack, 
                 level = 1, hp = None, equipment = None, 
-                items = None, money = 0, state = 'name', 
+                items = None, money = 0, state = 'class', 
                 class_of_plater = 'new player'):
         if hp == None:
             self._hp = max_hp
@@ -116,7 +126,7 @@ class player(person):
             else:
                 self._money -= 500
                 self._hp = self._max_hp / 2
-    
+    _available_weapon = None
     __class_of_player: str = None
     _money: int = 100
     _state: str = ''
@@ -161,5 +171,5 @@ class bower(player):
         self._attack += 100
         self._armor += 25
     
-    _available_weapon = 'bows'
+    _available_weapon = 'bow'
     _agility = 1

@@ -12,6 +12,6 @@ state = 11
 
 states = ('name', 'class', 'home', 'trip')
 
-weapon_types = ('knife', 'sword', 'bow')
+weapon_types = {'light': ['knife'], 'hard': ['sword'], 'bow': ['bow']}
 weapon_left_properties = ('acid', 'sharp', 'long')
 weapon_right_properties = ('of light', 'of fire')
