@@ -20,7 +20,7 @@ async def give_player_name(name):
     player = get_player(name.from_user.id)
     player.set_name(name.text)
     player.set_state('well done!')
-    update_player(name.from_user.id, player)
+    update_player(player)
     await bot.send_message(name.chat.id, 'Имя установлено! ')
     
 
@@ -32,13 +32,6 @@ async def print_status(user_id):
         До следующей прогулки:
         '''
     )
-
-# async def give_player_class(user_id, class_of_player):
-#     player = get_player(user_id)
-#     player.set_class_of_player(class_of_player)
-#     player.set_state('well done!')
-#     update_player(user_id, player)
-#     await bot.send_message(user_id, 'Класс установлен!')
 
 @dp.callback_query_handler(lambda c: c.data)
 async def process_callback_kb(callback_query: types.CallbackQuery):
@@ -52,12 +45,11 @@ async def process_callback_kb(callback_query: types.CallbackQuery):
         await bot.answer_callback_query(callback_query.id)
     elif data == 'warrior' or data == 'thief' or data == 'bower':
         if get_player(user_id) == []:
-
-            player = player_class_parser(data)('', 1000, 50, 100, state='name', class_of_plater= data)
+            player = player_class_parser(data)(user_id, data, '', 1000, 50, 100, state='name')
             weap = generate_weapon(player.get_available_weapon(), 1)
-            player.set_eqip(weap._name)
+            player.set_eqip(json.dumps({'weapon' : weap.dict()}))
             print(player.get_all_atributes())
-            add_player(user_id, player)
+            add_player(player)
             await bot.send_message(callback_query.message.chat.id, 'Назови своего персонажа!')
         else:
             await bot.send_message(callback_query.message.chat.id, f'{callback_query.from_user.first_name}, у тебя уже есть класс!')
@@ -95,14 +87,16 @@ async def get_text_messages(message):
     if message.text.lower() == 'привет':
         await bot.send_message(message.chat.id, 'Привет!')
     elif message.text.lower() == 'мой персонаж':
+
         player = get_player(message.from_user.id)
+        print(player.get_all_atributes())
         info = text(f'Имя: {player.get_name()}',
                     f'Класс: {player.get_class()}',
                     f'Здоровье: {player.get_hp()}/{player.get_max_hp()}',
                     f'Защита: {player.get_armor()}',
                     f'Атака: {player.get_attack()}',
                     f'Деньги: {player.get_money()}',
-                    f'Снаряжение: {player.get_eqip()}               ',
+                    f'Снаряжение: {player.get_equipment()}               ',
                     f'Инвентарь: {player.get_items()}', sep = '\n')
         await bot.send_message(message.chat.id, info, reply_markup = keyboards.my_character_keyboard)
 

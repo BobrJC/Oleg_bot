@@ -1,7 +1,8 @@
 import time
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from enum import Enum
-from weapons import weapon
+from weapons import bow, generate_weapon, hard, load_weapon_from_dict, weapon
+import json
 
 def player_class_parser(class_of_player: str):
     if class_of_player == 'warrior':
@@ -17,7 +18,7 @@ class person:
     def get_max_hp(self):
         return self._max_hp
     def get_attack(self):
-        return self._attack
+        return self._attack + self._weapon.get_attack()
     def get_armor(self):
         return self._armor
     def get_level(self):
@@ -28,6 +29,8 @@ class person:
         return self._equipment
     def get_items(self):
         return self._items
+    def get_weapon(self):
+        return self._weapon
     def set_hp(self, hp):
         self._hp = hp
     def set_max_hp(self, hp):
@@ -42,6 +45,11 @@ class person:
         self._equipment = equipment
     def set_items(self, items):
         self._items = items
+    def set_weapon(self, weapon):
+        self._weapon = weapon
+    def get_equipment(self):
+        return json.dumps({'weapon' : self._weapon.dict()})
+
     def __init__(self, hp, attack, armor):
         self._hp = hp
         self._attack = attack
@@ -53,7 +61,7 @@ class person:
         self._hp -= damage
         if self._hp <= 0:
             self._alife = False
-    
+
     _equipment: str = ''
     _items: str = ''
     _name: str = 'OLEG'
@@ -63,18 +71,18 @@ class person:
     _armor: int = 0
     _level: int = 1
     _alife: bool = True
-    _weapon: weapon
+    _weapon: weapon = None
     
-class player(person):
+class player(person, ABC):
     
-    def __init__(self, name, max_hp, armor, attack, 
-                level = 1, hp = None, equipment = None, 
-                items = None, money = 0, state = 'class', 
-                class_of_plater = 'new player'):
+    def __init__(self, id, class_of_player, name, max_hp, 
+                armor, attack, level = 1, hp = None, equipment = None, 
+                items = None, money = 0, state = 'class', weapon = None):
         if hp == None:
             self._hp = max_hp
         else:
             self._hp = hp
+        self._id_of_owner = id
         self._attack = attack
         self._armor = armor
         self._name = name
@@ -84,15 +92,19 @@ class player(person):
         self._state = state
         self._level = level
         self._money = money
-        self.__class_of_player = class_of_plater
-
-    def set_class_of_player(self, class_of_player):
         self.__class_of_player = class_of_player
+        print(equipment)
+        if equipment != None:
+            self._weapon = load_weapon_from_dict(json.loads(equipment)['weapon'])
+        
+        
     def get_all_atributes(self):
-        return({'class' : self.__class_of_player, 'name' : self._name, 
+        return({'id' : self._id_of_owner, 'class' : self.__class_of_player, 'name' : self._name, 
                'max_hp' : self._max_hp, 'armor' : self._armor, 'attack' : self._attack, 
                'level' : self._level, 'hp' : self._hp, 'equipment' : self._equipment, 
                'items' : self._items, 'money' : self._money, 'state' : self._state})
+    def set_class_of_player(self, class_of_player):
+        self.__class_of_player = class_of_player
     def get_state(self):
         return self._state
     def set_state(self, state):
@@ -101,6 +113,8 @@ class player(person):
         return self._money
     def get_agility(self):
         return self._agility
+    def get_id(self):
+        return self._id_of_owner_id_of_owner
     def add_money(self, money):
         self._money += money
     def add_xp(self, xp):
@@ -126,6 +140,8 @@ class player(person):
             else:
                 self._money -= 500
                 self._hp = self._max_hp / 2
+                
+    _id_of_owner: int = 0
     _available_weapon = None
     __class_of_player: str = None
     _money: int = 100
