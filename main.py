@@ -9,12 +9,15 @@ from aiogram.utils.markdown import text
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from Token import token
+from battle import *
 bot = Bot(token)
 dp = Dispatcher(bot)
 
-async def sleeping(message):
-    await asyncio.sleep(5)
-    await bot.send_message(message, 'я доспал!')
+#async def sleeping(message):
+#    await asyncio.sleep(5)
+#    await bot.send_message(message, 'я доспал!')
+async def on_startup(_):
+    asyncio.create_task(check_battle())
 
 async def give_player_name(name):
     player = get_player(name.from_user.id)
@@ -32,33 +35,39 @@ async def print_status(user_id):
         До следующей прогулки:
         '''
     )
-
+#все кнопки в одной функции?..
 @dp.callback_query_handler(lambda c: c.data)
 async def process_callback_kb(callback_query: types.CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    player = get_player(user_id)
     if data == 'status':
         await bot.answer_callback_query(callback_query.id)
     elif data == 'equip':
         await bot.answer_callback_query(callback_query.id)
     elif data == 'trip':
+        if add_oponent(player.get_id(), player.get_level(), chat_id):
+            await bot.send_message(chat_id, 'Идет поиск противника')
+        else:
+            await bot.send_message(chat_id, 'Поиск продолжается')
         await bot.answer_callback_query(callback_query.id)
     elif data == 'warrior' or data == 'thief' or data == 'bower':
-        if get_player(user_id) == []:
+        if player == []:
             player = player_class_parser(data)(user_id, data, '', 1000, 50, 100, state='name')
             weap = generate_weapon(player.get_available_weapon(), 1)
             player.set_eqip(json.dumps({'weapon' : weap.dict()}))
-            print(player.get_all_atributes())
+            #print(player.get_all_atributes())
             add_player(player)
-            await bot.send_message(callback_query.message.chat.id, 'Назови своего персонажа!')
+            await bot.send_message(chat_id, 'Назови своего персонажа!')
         else:
-            await bot.send_message(callback_query.message.chat.id, f'{callback_query.from_user.first_name}, у тебя уже есть класс!')
+            await bot.send_message(chat_id, f'{callback_query.from_user.first_name}, у тебя уже есть класс!')
         await bot.answer_callback_query(callback_query.id)
     
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message):
-    print(get_player(message.from_user.id))
+    #print(get_player(message.from_user.id))
     if message.text == '/start':
         if get_player(message.from_user.id) != []:
             await bot.send_message(message.chat.id, 'Ты уже в игре!')
@@ -89,7 +98,7 @@ async def get_text_messages(message):
     elif message.text.lower() == 'мой персонаж':
 
         player = get_player(message.from_user.id)
-        print(player.get_all_atributes())
+        #print(player.get_all_atributes())
         info = text(f'Имя: {player.get_name()}',
                     f'Класс: {player.get_class()}',
                     f'Здоровье: {player.get_hp()}/{player.get_max_hp()}',
@@ -102,4 +111,5 @@ async def get_text_messages(message):
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=False, on_startup=on_startup)
+    

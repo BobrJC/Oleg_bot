@@ -93,7 +93,7 @@ class player(person, ABC):
         self._level = level
         self._money = money
         self.__class_of_player = class_of_player
-        print(equipment)
+        #print(equipment)
         if equipment != None:
             self._weapon = load_weapon_from_dict(json.loads(equipment)['weapon'])
         
@@ -114,7 +114,7 @@ class player(person, ABC):
     def get_agility(self):
         return self._agility
     def get_id(self):
-        return self._id_of_owner_id_of_owner
+        return self._id_of_owner
     def add_money(self, money):
         self._money += money
     def add_xp(self, xp):
@@ -131,9 +131,9 @@ class player(person, ABC):
         self._level += 1
     
     def take_damage(self, damage):
-        self.__hp -= damage
-        if self.__hp <= 0:
-            self.__alife = False
+        self._hp -= damage
+        if self._hp <= 0:
+            self._alife = False
             if self._money >= 500:
                 self._money -= 500
                 self._hp = self._max_hp
@@ -150,6 +150,7 @@ class player(person, ABC):
     _xp = 0
     _xp_next_level = 100
     
+#слишком похожие классы
 class warrior(player):
     def get_class(self):
         return 'Воин'
